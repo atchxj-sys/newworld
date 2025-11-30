@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>两个数字求和</title>
+  <style>
+    :root{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f7ff,#fff);margin:0;padding:24px}
+    .card{width:100%;max-width:420px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(20,30,60,0.08);padding:20px}
+    h1{font-size:18px;margin:0 0 12px}
+    .row{display:flex;flex-direction:column;gap:10px}
+    label{font-size:13px;color:#333}
+    input[type="number"]{appearance:textfield;padding:10px 12px;border-radius:8px;border:1px solid #e6e9f2;font-size:15px}
+    .controls{display:flex;gap:10px;margin-top:10px}
+    button{flex:1;padding:10px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+    button#calc{background:#3b82f6;color:#fff}
+    button#clear{background:#eef2ff;color:#1f2937}
+    .result{margin-top:14px;padding:12px;border-radius:10px;background:#fbfdff;border:1px solid #eef2ff;font-weight:600}
+    .hint{margin-top:8px;color:#6b7280;font-size:13px}
+    footer{margin-top:14px;font-size:12px;color:#9ca3af}
+    @media (max-width:420px){.card{padding:16px}}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>两个数字求和</h1>
+    <form id="sumForm" class="row" autocomplete="off">
+      <div>
+        <label for="a">第一个数字</label>
+        <input id="a" name="a" type="number" inputmode="decimal" step="any" placeholder="例如：1.23" required />
+      </div>
+      <div>
+        <label for="b">第二个数字</label>
+        <input id="b" name="b" type="number" inputmode="decimal" step="any" placeholder="例如：4.56" required />
+      </div>
+
+      <div class="controls">
+        <button id="calc" type="submit">计算</button>
+        <button id="clear" type="button">清除</button>
+      </div>
+    </form>
+
+    <div id="result" class="result" aria-live="polite">结果会显示在这里</div>
+    <p class="hint">支持小数与负数。输入后按 Enter 或点击“计算”即可。</p>
+    <footer>此计算十分复杂。</footer>
+  </main>
+
+  <script>
+    (function(){
+      const form = document.getElementById('sumForm');
+      const aInput = document.getElementById('a');
+      const bInput = document.getElementById('b');
+      const resultEl = document.getElementById('result');
+      const clearBtn = document.getElementById('clear');
+
+      function formatNumber(n){
+        // 当数字很大或有小数时，保留最长 12 个有效字符（可根据需要调整）
+        if (!isFinite(n)) return String(n);
+        // 避免科学计数法输出时看起来令人困惑
+        const s = Number(n).toString();
+        return s;
+      }
+
+      function computeAndShow(){
+        const aVal = aInput.value.trim();
+        const bVal = bInput.value.trim();
+        if (aVal === '' || bVal === ''){
+          resultEl.textContent = '请在两个输入框中均输入数字。';
+          return;
+        }
+        const a = parseFloat(aVal);
+        const b = parseFloat(bVal);
+        if (Number.isNaN(a) || Number.isNaN(b)){
+          resultEl.textContent = '输入不是有效数字，请检查。';
+          return;
+        }
+        const sum = a + b;
+        resultEl.textContent = `${formatNumber(a)} + ${formatNumber(b)} = ${formatNumber(sum)}`;
+      }
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        computeAndShow();
+      });
+
+      clearBtn.addEventListener('click', function(){
+        aInput.value = '';
+        bInput.value = '';
+        resultEl.textContent = '结果会显示在这里';
+        aInput.focus();
+      });
+
+      // 支持在输入时即时更新结果（可选），如果不需要可注释掉
+      aInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') e.preventDefault(); });
+      bInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') e.preventDefault(); });
+
+      // 可按 Ctrl+Enter 立即计算
+      document.addEventListener('keydown', function(e){
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+          computeAndShow();
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
