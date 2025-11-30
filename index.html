@@ -1,27 +1,113 @@
-<html lang="zh-CN"><head>
+<html lang="zh-CN">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>致记忆中的镜莲华</title>
 </head>
 
-<body style="
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-">
-    <touxiang style="
-    width: 100%;
-    height: 160px;
-    background-color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    ">
-        <img src="image.jpg" alt="scene" width="80" height="80">
-    </touxiang>
-    <p>一个安静的窝</p>
-    <p>你好，我是诸东升，欢迎来到我的主页</p>
+<body>
+    <div class="headline">
+        <img src="image.jpg" alt="scene" class="headline-img">
+        <p class="headline-text">
+            致记忆中的镜莲华
+        </p>
+    </div>
+    <div class="introduction">
+        <p class="introduction-text">
+            你好！我是诸东升，欢迎来到我的主页，我计划在这里写一些实用工具和生活记录，这里还在建设中~
+        </p>
+    </div>
 
+    <div class="function">
+        <div class="function-card">
+            <a href="sum.html" class="btn">高难度计算</a>
+        </div>
+        <div class="function-card">
 
-</body></html>
+        </div>
+    </div>
+
+    <style>
+    .headline {
+        width: 100%;
+        height: 80px;
+        display: flex;
+        /*align-items: center;      /* 垂直居中整个行 */
+        /*padding: 10px;            /* 外边距与内边距分开管理 */
+        /*box-sizing: border-box;   /* 避免 padding 撑大宽度 */
+        /*gap: 10px;                /* 图片和文字间距 */
+    }
+
+    .headline-img {
+        width: 60px;
+        height: 60px;
+        margin: 10px;
+        border-radius: 10px;      /* 图片圆角 */
+        /*object-fit: cover;        /* 保持图片比例填充 */
+    }
+
+    .headline-text {
+        flex: 1;                  /* 自动占满剩余宽度 */
+        height: 60px;
+        margin: 10px;
+        display: flex;
+        align-items: center;      /* 垂直居中 */
+        justify-content: center;  /* 水平居中 */
+        background-color: #eee;
+        border: 1px solid #ddd;     /* 浅灰边框 */
+        border-radius: 10px;        /* 圆角（越大越圆） */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 轻微阴影 */
+    }
+
+    .introduction {
+        width: 100%;
+        height: 80px;
+        display: flex;
+        justify-content: center;  /* 水平居中 */
+    }
+
+    .introduction-text {
+        width: 60%;
+        height: 80px;
+    }
+
+    .function {
+        width: 100%;
+        height: 300px;
+        display: flex;
+    }
+    
+    .function-card {
+        width: 50%;               /* 可改 */
+        height: 260px;
+        margin: 20px;
+        background-color: #f8f8f8;  /* 浅灰背景 */
+        border: 1px solid #ddd;     /* 浅灰边框 */
+        border-radius: 10px;        /* 圆角（越大越圆） */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 轻微阴影 */
+        display: flex;
+        justify-content: center;  /* 水平居中 */
+    }
+
+    .btn {
+        margin: 10px;
+        width: 40%;
+        height: 30px;
+        display: flex;              /* 把按钮本身变成 flex 容器 */
+        justify-content: center;    /* 水平居中文字 */
+        align-items: center;        /* 垂直居中文字 */
+        background-color: #888;    /* 灰色背景 */
+        color: white;              /* 文字颜色 */
+        text-decoration: none;       /* 去掉下划线 */
+        border-radius: 8px;        /* 圆角 */
+        font-size: 16px;
+        transition: background 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #666;    /* 悬停稍深灰色 */
+    }
+
+    </style>
+</body>
+</html>
