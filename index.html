@@ -1,113 +1,177 @@
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>致记忆中的镜莲华</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>算24小工具</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    html,body{height:100%;margin:0;font-family:Inter,UI-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071029 0%, #07172a 100%);color:#e6eef6}
+    .card{width:760px;max-width:92%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:22px;box-shadow:0 8px 30px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0 0 6px;font-size:20px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    .inputs{display:flex;gap:10px;margin-bottom:12px}
+    .inputs input{width: 120px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:16px}
+    .row{display:flex;gap:10px;align-items:center}
+    button{background:var(--accent);border:none;color:#052024;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .result{margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);min-height:56px}
+    .solution{padding:10px;border-radius:8px;background:rgba(6,182,212,0.06);color:var(--accent);display:inline-block;margin:6px 6px 0 0}
+    .small{font-size:13px;color:var(--muted)}
+    .footer{margin-top:14px;color:var(--muted);font-size:13px}
+    .controls{margin-left:auto;display:flex;gap:8px}
+    .examples{display:flex;gap:8px;margin-top:10px}
+    .examples button{background:transparent;border:1px dashed rgba(255,255,255,0.04);color:var(--muted);padding:8px;border-radius:8px}
+    @media (max-width:520px){.inputs{flex-direction:column}.controls{margin-left:0}}
+  </style>
 </head>
-
 <body>
-    <div class="headline">
-        <img src="image.jpg" alt="scene" class="headline-img">
-        <p class="headline-text">
-            致记忆中的镜莲华
-        </p>
-    </div>
-    <div class="introduction">
-        <p class="introduction-text">
-            你好！我是诸东升，欢迎来到我的主页，我计划在这里写一些实用工具和生活记录，这里还在建设中~
-        </p>
-    </div>
+  <div class="card" role="main">
+    <h1>算24 小工具</h1>
+    <p class="lead">输入 4 个数字（可以是整数或小数），点击“检查”来找出能否用 + - × ÷ 和括号算出 24。结果会列出所有找到的表达式。</p>
 
-    <div class="function">
-        <div class="function-card">
-            <a href="sum.html" class="btn">高难度计算</a>
-        </div>
-        <div class="function-card">
-
-        </div>
+    <div class="inputs" aria-label="数字输入">
+      <input id="n0" type="text" inputmode="numeric" pattern="[0-9.\-]+" placeholder="数字 1" />
+      <input id="n1" type="text" inputmode="numeric" pattern="[0-9.\-]+" placeholder="数字 2" />
+      <input id="n2" type="text" inputmode="numeric" pattern="[0-9.\-]+" placeholder="数字 3" />
+      <input id="n3" type="text" inputmode="numeric" pattern="[0-9.\-]+" placeholder="数字 4" />
     </div>
 
-    <style>
-    .headline {
-        width: 100%;
-        height: 80px;
-        display: flex;
-        /*align-items: center;      /* 垂直居中整个行 */
-        /*padding: 10px;            /* 外边距与内边距分开管理 */
-        /*box-sizing: border-box;   /* 避免 padding 撑大宽度 */
-        /*gap: 10px;                /* 图片和文字间距 */
+    <div class="row">
+      <div style="display:flex;gap:8px">
+        <button id="check">检查</button>
+        <button id="shuffle" class="secondary">随机填充</button>
+        <button id="clear" class="secondary">清空</button>
+      </div>
+
+      <div class="controls">
+        <div class="small">允许小数</div>
+      </div>
+    </div>
+
+    <div class="examples small">示例：
+      <button data-ex="1,3,4,6">1,3,4,6</button>
+      <button data-ex="3,3,8,8">3,3,8,8</button>
+      <button data-ex="5,5,5,1">5,5,5,1</button>
+    </div>
+
+    <div class="result" id="result" aria-live="polite">结果将在这里显示。</div>
+
+    <div class="footer">提示：使用除法时会避免除以 0。求解器枚举所有数字排列、运算符组合和常见括号组合。</div>
+  </div>
+
+  <script>
+    // 精度容差
+    const EPS = 1e-6;
+    const TARGET = 24;
+
+    // 生成所有排列（Fisher-Yates + backtracking simpler here using recursion）
+    function permutations(arr) {
+      const res = [];
+      const used = Array(arr.length).fill(false);
+      const cur = [];
+      function dfs() {
+        if (cur.length === arr.length) { res.push(cur.slice()); return; }
+        for (let i=0;i<arr.length;i++) if (!used[i]){ used[i]=true; cur.push(arr[i]); dfs(); cur.pop(); used[i]=false; }
+      }
+      dfs();
+      return res;
     }
 
-    .headline-img {
-        width: 60px;
-        height: 60px;
-        margin: 10px;
-        border-radius: 10px;      /* 图片圆角 */
-        /*object-fit: cover;        /* 保持图片比例填充 */
+    // 所有运算符组合
+    const ops = ['+','-','*','/'];
+    function opCombos() {
+      const res=[];
+      for(let a of ops) for(let b of ops) for(let c of ops) res.push([a,b,c]);
+      return res;
+    }
+    const opList = opCombos();
+
+    // 尝试 5 种括号结构
+    // 1: ((a op b) op c) op d
+    // 2: (a op (b op c)) op d
+    // 3: a op ((b op c) op d)
+    // 4: a op (b op (c op d))
+    // 5: (a op b) op (c op d)
+    function applyOp(x,y,op){
+      if (op === '+') return x + y;
+      if (op === '-') return x - y;
+      if (op === '*') return x * y;
+      if (op === '/') {
+        if (Math.abs(y) < EPS) return null; // 除以0
+        return x / y;
+      }
+      return null;
     }
 
-    .headline-text {
-        flex: 1;                  /* 自动占满剩余宽度 */
-        height: 60px;
-        margin: 10px;
-        display: flex;
-        align-items: center;      /* 垂直居中 */
-        justify-content: center;  /* 水平居中 */
-        background-color: #eee;
-        border: 1px solid #ddd;     /* 浅灰边框 */
-        border-radius: 10px;        /* 圆角（越大越圆） */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 轻微阴影 */
+    function formatNumber(n){
+      if (Number.isInteger(n)) return String(n);
+      return parseFloat(n.toFixed(6));
     }
 
-    .introduction {
-        width: 100%;
-        height: 80px;
-        display: flex;
-        justify-content: center;  /* 水平居中 */
+    function generateSolutions(nums){
+      const sols = new Set();
+      const perms = permutations(nums);
+      for (const p of perms){
+        for (const o of opList){
+          const [a,b,c,d] = p; const [o1,o2,o3] = o;
+          // 1
+          let r1 = applyOp(a,b,o1); if (r1!==null){ let r12 = applyOp(r1,c,o2); if (r12!==null){ let r123 = applyOp(r12,d,o3); if (r123!==null && Math.abs(r123 - TARGET) < EPS) sols.add(`((${formatNumber(a)} ${o1} ${formatNumber(b)}) ${o2} ${formatNumber(c)}) ${o3} ${formatNumber(d)}`); }}
+          // 2
+          let s1 = applyOp(b,c,o2); if (s1!==null){ let s12 = applyOp(a,s1,o1); if (s12!==null){ let s123 = applyOp(s12,d,o3); if (s123!==null && Math.abs(s123 - TARGET) < EPS) sols.add(`( ${formatNumber(a)} ${o1} (${formatNumber(b)} ${o2} ${formatNumber(c)}) ) ${o3} ${formatNumber(d)}`); }}
+          // 3
+          let t1 = applyOp(b,c,o2); if (t1!==null){ let t12 = applyOp(t1,d,o3); if (t12!==null){ let t123 = applyOp(a,t12,o1); if (t123!==null && Math.abs(t123 - TARGET) < EPS) sols.add(`${formatNumber(a)} ${o1} ((${formatNumber(b)} ${o2} ${formatNumber(c)}) ${o3} ${formatNumber(d)})`); }}
+          // 4
+          let u1 = applyOp(c,d,o3); if (u1!==null){ let u12 = applyOp(b,u1,o2); if (u12!==null){ let u123 = applyOp(a,u12,o1); if (u123!==null && Math.abs(u123 - TARGET) < EPS) sols.add(`${formatNumber(a)} ${o1} (${formatNumber(b)} ${o2} (${formatNumber(c)} ${o3} ${formatNumber(d)}))`); }}
+          // 5
+          let v1 = applyOp(a,b,o1); let v2 = applyOp(c,d,o3);
+          if (v1!==null && v2!==null){ let v12 = applyOp(v1,v2,o2); if (v12!==null && Math.abs(v12 - TARGET) < EPS) sols.add(`(${formatNumber(a)} ${o1} ${formatNumber(b)}) ${o2} (${formatNumber(c)} ${o3} ${formatNumber(d)})`); }
+        }
+      }
+      return Array.from(sols);
     }
 
-    .introduction-text {
-        width: 60%;
-        height: 80px;
+    // 辅助：解析输入
+    function parseInputs(){
+      const arr = [];
+      for(let i=0;i<4;i++){
+        const v = document.getElementById('n'+i).value.trim();
+        if (v === '') return {ok:false, msg:'请填写所有 4 个数字'};
+        // 允许负数和小数
+        const n = Number(v);
+        if (!isFinite(n)) return {ok:false, msg:`第 ${i+1} 个输入不是有效数字`};
+        arr.push(n);
+      }
+      return {ok:true, nums:arr};
     }
 
-    .function {
-        width: 100%;
-        height: 300px;
-        display: flex;
-    }
-    
-    .function-card {
-        width: 50%;               /* 可改 */
-        height: 260px;
-        margin: 20px;
-        background-color: #f8f8f8;  /* 浅灰背景 */
-        border: 1px solid #ddd;     /* 浅灰边框 */
-        border-radius: 10px;        /* 圆角（越大越圆） */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 轻微阴影 */
-        display: flex;
-        justify-content: center;  /* 水平居中 */
-    }
+    // 事件绑定
+    document.getElementById('check').addEventListener('click', ()=>{
+      const out = document.getElementById('result'); out.innerHTML = '正在计算...';
+      const p = parseInputs();
+      if (!p.ok){ out.innerHTML = `<div class="small">${p.msg}</div>`; return; }
+      const sols = generateSolutions(p.nums);
+      if (sols.length === 0) {
+        out.innerHTML = '<div class="small">没有找到可以得到 24 的表达式。</div>';
+      } else {
+        out.innerHTML = `<div class="small">共找到 ${sols.length} 个解（去重后）：</div>` + sols.map(s=>`<div class="solution">${s}</div>`).join('');
+      }
+    });
 
-    .btn {
-        margin: 10px;
-        width: 40%;
-        height: 30px;
-        display: flex;              /* 把按钮本身变成 flex 容器 */
-        justify-content: center;    /* 水平居中文字 */
-        align-items: center;        /* 垂直居中文字 */
-        background-color: #888;    /* 灰色背景 */
-        color: white;              /* 文字颜色 */
-        text-decoration: none;       /* 去掉下划线 */
-        border-radius: 8px;        /* 圆角 */
-        font-size: 16px;
-        transition: background 0.3s;
-    }
+    document.getElementById('shuffle').addEventListener('click', ()=>{
+      // 1..13 内随机整数，部分示例更常见
+      for(let i=0;i<4;i++) document.getElementById('n'+i).value = String(Math.floor(Math.random()*13)+1);
+    });
+    document.getElementById('clear').addEventListener('click', ()=>{ for(let i=0;i<4;i++) document.getElementById('n'+i).value=''; document.getElementById('result').innerHTML='结果将在这里显示。'; });
 
-    .btn:hover {
-        background-color: #666;    /* 悬停稍深灰色 */
-    }
+    // 示例按钮
+    document.querySelectorAll('[data-ex]').forEach(btn=> btn.addEventListener('click', ()=>{
+      const arr = btn.getAttribute('data-ex').split(','); for(let i=0;i<4;i++) document.getElementById('n'+i).value = arr[i]||'';
+    }));
 
-    </style>
+    // 回车提交
+    document.querySelectorAll('.inputs input').forEach(inp=> inp.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') document.getElementById('check').click(); }));
+  </script>
 </body>
 </html>
